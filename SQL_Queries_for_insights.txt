@@ -1,0 +1,160 @@
+--JOIN on Orders,Customers table for getting the State(location) of the order.
+DROP TABLE IF EXISTS #temp_table;
+CREATE TABLE #temp_table
+(
+	Customer_ID varchar(50),
+	State varchar(50),
+	Product_ID varchar(50),
+);
+INSERT INTO #temp_table
+SELECT orders.Customer_ID,State,Product_ID
+FROM orders JOIN customers
+ON orders.Customer_ID = customers.Customer_ID;
+
+SELECT * FROM #temp_table;
+
+--JOIN on temp_table and Product table for the products category&sub_category
+DROP TABLE IF EXISTS #product_temp;
+CREATE TABLE #product_temp
+(
+	Product_ID varchar(50),
+	Category varchar(50),
+	Sub_Category varchar(50),
+	State varchar(50),
+);
+
+INSERT INTO #product_temp
+SELECT #temp_table.Product_ID,
+Category,Sub_Category,State
+FROM products JOIN #temp_table
+ON products.Product_ID = #temp_table.Product_ID;
+
+SELECT * FROM #product_temp;
+
+--JOIN on product_temp and Sales table for getting the sales details of product
+DROP TABLE IF EXISTS #sales_temp;
+CREATE TABLE #sales_temp
+(
+	Product_ID varchar(50),
+	Category varchar(50),
+	Sub_Category varchar(50),
+	State varchar(50),
+	Quantity int,
+	Sales float,
+);
+
+INSERT INTO #sales_temp
+SELECT #product_temp.Product_ID,
+Category,Sub_Category,State,Quantity,Sales
+FROM #product_temp 
+JOIN sales
+ON #product_temp.Product_ID = sales.Product_ID;
+
+
+-- Sub_Category Vs Sales
+SELECT Category,Sub_Category,SUM(Sales) AS TotalSales 
+FROM #sales_temp
+GROUP BY Category,Sub_Category ORDER BY TotalSales;
+
+
+
+-- Highest Sales Sub_Category
+SELECT TOP 1 Category,Sub_Category,SUM(Sales) AS TotalSales 
+FROM #sales_temp 
+GROUP BY Category,Sub_Category ORDER BY TotalSales DESC;
+
+
+
+-- State Vs Sales
+SELECT State,SUM(Sales) AS TotalSales FROM #sales_temp
+GROUP BY State ORDER BY TotalSales;
+
+
+
+
+-- Highest Sales State
+SELECT TOP 1 State,SUM(Sales) AS TotalSales FROM #sales_temp
+GROUP BY State ORDER BY TotalSales DESC;
+
+
+
+
+-- Profit Vs Sub-Category
+DROP TABLE IF EXISTS #sales_temp;
+CREATE TABLE #sales_temp
+(
+	Product_ID varchar(50),
+	Category varchar(50),
+	Sub_Category varchar(50),
+	State varchar(50),
+	Quantity int,
+	Sales float,
+	Profit float,
+);
+
+
+INSERT INTO #sales_temp
+SELECT #product_temp.Product_ID,Category,Sub_Category,State,Quantity,Sales,Profit
+FROM #product_temp JOIN sales
+ON #product_temp.Product_ID = sales.Product_ID;
+
+SELECT Category,Sub_Category,SUM(Profit) AS totalProfit
+FROM #sales_temp
+GROUP BY Category,Sub_Category ORDER BY totalProfit;
+
+
+
+
+-- Highest Profit Sub_Category
+SELECT TOP 1 Category,Sub_Category,SUM(Profit) AS totalProfit 
+FROM #sales_temp 
+GROUP BY Category,Sub_Category 
+ORDER BY totalProfit DESC;
+
+
+
+-- Highest Loss Sub_Category
+SELECT TOP 1 Category,Sub_Category,SUM(Profit) AS totalProfit 
+FROM #sales_temp 
+GROUP BY Category,Sub_Category
+ORDER BY totalProfit;
+
+
+
+--Least Profit Sub_Category
+SELECT TOP 1 Category,Sub_Category,SUM(Profit) AS totalProfit 
+FROM #sales_temp
+WHERE Profit > 0
+GROUP BY Category,Sub_Category
+ORDER BY totalProfit;
+
+
+
+
+-- Discount Vs Profit
+DROP TABLE IF EXISTS #sales_temp;
+CREATE TABLE #sales_temp
+(
+	Product_ID varchar(50),
+	Category varchar(50),
+	Sub_Category varchar(50),
+	State varchar(50),
+	Quantity int,
+	Sales float,
+	Profit float,
+	Discount float,
+);
+
+
+INSERT INTO #sales_temp
+SELECT #product_temp.Product_ID,
+Category,Sub_Category,State,Quantity,Sales,Profit,Discount
+FROM #product_temp JOIN sales
+ON #product_temp.Product_ID = sales.Product_ID;
+
+SELECT Category,Sub_Category,SUM(Discount) AS totalDiscount,
+SUM(Profit) AS totalProfit 
+FROM #sales_temp 
+GROUP BY Category,Sub_Category ORDER BY totalDiscount;
+
+
