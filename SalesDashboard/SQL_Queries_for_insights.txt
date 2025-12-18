@@ -157,4 +157,16 @@ SUM(Profit) AS totalProfit
 FROM #sales_temp 
 GROUP BY Category,Sub_Category ORDER BY totalDiscount;
 
+--Profit Margin
+SELECT SUM(Profit)/ SUM(Sales) AS ProfitMargin
+FROM #sales_temp;
+
+--Yearly, Monthly Sales
+SELECT YEAR(orders.Order_Date) AS Year,MONTH(orders.Order_Date) AS Month, SUM(Sales) AS TotalSales
+FROM orders JOIN Sales
+ON orders.Product_ID = Sales.Product_ID
+GROUP BY orders.Order_Date,orders.Order_Date Order BY Year,Month;
+
+
+
 
